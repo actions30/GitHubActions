@@ -6,6 +6,11 @@ jobs:
     first_job:
         runs-on: ubuntu-latest
         steps:
+
+        - name: Checkout repo
+          uses: actions/checkoutv4
+          
+          
         - name: Welcome msg
           run: | 
             echo "My frst Actions"
