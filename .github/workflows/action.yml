@@ -1,4 +1,4 @@
-name: My First Workflow
+name: Generate ASCII artwork
 
 on: push
 
@@ -28,10 +28,6 @@ jobs:
 
         - name: display the file contents
           run: cat dragon.txt  
-
-
-
-
 
         - name: Checkout Repo  
           uses: actions/checkout@v4
