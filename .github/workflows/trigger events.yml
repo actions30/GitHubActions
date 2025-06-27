@@ -18,10 +18,6 @@ jobs:
               run: echo docker push ${{vars.CONTAINER_REGISTRY}}/${{vars.DOCKER_USERNAME}}/${{vars.IMAGE_NAME}}:latest
               
     deploy:
-
-        concurrency: 
-            group: deployment
-            cancel-in-progress: true
         needs:
          docker
          
@@ -29,5 +25,8 @@ jobs:
         steps:
             - name: Docker Run
               timeout-minutes: 2
-              run: echo docker run -d -p 8080:80 ${{vars.CONTAINER_REGISTRY}}/${{vars.DOCKER_USERNAME}}/${{vars.IMAGE_NAME}}:latest
+              
+              run: |
+                   echo docker run -d -p 8080:80 ${{vars.CONTAINER_REGISTRY}}/${{vars.DOCKER_USERNAME}}/${{vars.IMAGE_NAME}}:latest
+                   sleep 500s
 
