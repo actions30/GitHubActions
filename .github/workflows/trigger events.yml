@@ -1,6 +1,6 @@
 name: variables and secrets
 on: 
-    workflow_dispatch: 
+    workflow_dispatch:  
 
 jobs:
     docker:
@@ -28,6 +28,6 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Docker Run
-              timeout-minutes: 1
+              timeout-minutes: 2
               run: echo docker run -d -p 8080:80 ${{vars.CONTAINER_REGISTRY}}/${{vars.DOCKER_USERNAME}}/${{vars.IMAGE_NAME}}:latest
 
