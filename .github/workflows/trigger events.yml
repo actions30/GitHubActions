@@ -1,6 +1,6 @@
 name: variables and secrets
 on: 
-    workflow_dispatch:  
+    push  
 
 jobs:
     docker:
