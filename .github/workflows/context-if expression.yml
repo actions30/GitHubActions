@@ -43,7 +43,7 @@ jobs:
     deploy:
         if: github.ref == 'refs/main/head'
         needs: test
-        runs-on: ubuntu-latest
+        runs-on: ubuntuu-latest
         steps:
 
             - name: downlaod artifact
