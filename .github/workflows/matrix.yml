@@ -1,7 +1,6 @@
 name: Matrix_configuration
 
-on: 
-    - push
+on:
     - workflow_dispatch 
 
 jobs:  
