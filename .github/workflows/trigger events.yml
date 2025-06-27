@@ -1,4 +1,4 @@
-name: variables and secrets
+name: concurrency
 on: 
     workflow_dispatch:
 
