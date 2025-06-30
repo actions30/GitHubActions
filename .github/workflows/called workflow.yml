@@ -13,13 +13,13 @@ jobs:
 
 
             - name: Execute cowsay command
-              run: cowsay -f dragon "Im a Dragon" >> dragon.txt
+              run: cowsay -f dragon "Im a Dragon" >> dragon2.txt
               
             - name: upload artifact
               uses: actions/upload-artifact@v4
               with:
-                name: dragon-artifact
-                path: dragon.txt
+                name: dragon2-artifact
+                path: dragon2.txt
                 
 
             - name: sleep for 30 secs
@@ -35,12 +35,11 @@ jobs:
             - name: downlaod artifact
               uses: actions/download-artifact@v4
               with:
-                name: dragon-artifact
+                name: dragon2-artifact
          
 
             - name: test files exits 
-              run: grep -i "dragon" dragon.txt  
+              run: grep -i "dragon" dragon2.txt  
 
     deploy:
-        needs: test
         uses: ./.github/workflows/reusable.yml

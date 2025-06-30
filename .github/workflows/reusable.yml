@@ -13,12 +13,12 @@ jobs:
 
 
             - name: Execute cowsay command
-              run: cowsay -f dragon "Im a Dragon" >> dragon.txt
+              run: cowsay -f dragon "Im a Dragon" >> dragon1.txt
               
             - name: upload artifact
               uses: actions/upload-artifact@v4
               with:
-                name: dragon-artifact
+                name: dragon1-artifact
                 path: dragon.txt
                 
 
@@ -35,11 +35,11 @@ jobs:
             - name: downlaod artifact
               uses: actions/download-artifact@v4
               with:
-                name: dragon-artifact
+                name: dragon1-artifact
          
 
             - name: test files exits 
-              run: grep -i "dragon" dragon.txt  
+              run: grep -i "dragon" dragon1.txt  
 
     deploy:
         needs: test
@@ -49,10 +49,10 @@ jobs:
             - name: downlaod artifact
               uses: actions/download-artifact@v4
               with:
-                name: dragon-artifact
+                name: dragon1-artifact
 
             - name: Read the file
-              run: cat dragon.txt
+              run: cat dragon1.txt
 
             - name: Deploy
               run: echo deploying.........  
