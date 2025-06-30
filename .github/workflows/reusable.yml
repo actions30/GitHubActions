@@ -25,34 +25,4 @@ jobs:
             - name: sleep for 30 secs
               run: sleep 30
 
-    test:
-        needs: build
-        runs-on: ubuntu-latest
-        steps:
-            - name: sleep for 10 secs
-              run: sleep 10
-
-            - name: downlaod artifact
-              uses: actions/download-artifact@v4
-              with:
-                name: dragon1-artifact
-         
-
-            - name: test files exits 
-              run: grep -i "dragon" dragon1.txt  
-
-    deploy:
-        needs: test
-        runs-on: ubuntu-latest
-        steps:
-
-            - name: downlaod artifact
-              uses: actions/download-artifact@v4
-              with:
-                name: dragon1-artifact
-
-            - name: Read the file
-              run: cat dragon1.txt
-
-            - name: Deploy
-              run: echo deploying.........  
+    

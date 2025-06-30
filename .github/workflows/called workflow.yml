@@ -5,41 +5,5 @@ on:
 
 jobs:
     build:
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Install cowsay
-              run: sudo apt-get install cowsay -y
-
-
-            - name: Execute cowsay command
-              run: cowsay -f dragon "Im a Dragon" >> dragon2.txt
-              
-            - name: upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: dragon2-artifact
-                path: dragon2.txt
-                
-
-            - name: sleep for 30 secs
-              run: sleep 30
-
-    test:
-        needs: build
-        runs-on: ubuntu-latest
-        steps:
-            - name: sleep for 10 secs
-              run: sleep 10
-
-            - name: downlaod artifact
-              uses: actions/download-artifact@v4
-              with:
-                name: dragon2-artifact
-         
-
-            - name: test files exits 
-              run: grep -i "dragon" dragon2.txt  
-
-    deploy:
         uses: ./.github/workflows/reusable.yml
+        
