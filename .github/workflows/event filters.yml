@@ -1,0 +1,21 @@
+name: Activity and filters
+
+on:
+    workflow_dispatch:  
+    push:
+        branches: 
+            - main
+            - '!feature/*'
+            
+       #  branches-ignore: 
+       #     - feature/*
+       #     - test/**
+
+    pull_request: 
+        types: 
+            - opened
+            - closed
+        paths-ignore: 
+            - README.md
+        branches: 
+            - main        
