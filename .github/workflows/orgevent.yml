@@ -34,7 +34,7 @@ jobs:
               order: 'desc'
             });
 
-            const newJoins = results.data.filter(entry => new Date(entry@created_at) >= new Date(since));
+            const newJoins = results.data.filter(entry => new Date(entry.created_at) >= new Date(since));
             if (newJoins.length > 0) {
               const usernames = newJoins.map(entry => entry.actor).join(', ');
               core.setOutput('new_joins', usernames);
