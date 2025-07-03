@@ -1,71 +1,26 @@
-name: Detect New Org Member (Dispatch)
+name: Welcome New Org Member
 
 on:
   repository_dispatch:
     types: [new-org-member]
 
 jobs:
-  handle-dispatch:
+  welcome-user:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed to push to repo
-    env:
-      ORG_NAME: actions30
-      REPO_NAME: actions30/GitHubActions
-      GH_TOKEN: ${{ secrets.TOKEN }}
+      issues: write  # required to create an issue
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      - name: Fetch current member list
+      - name: Create welcome issue
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN }}
+          REPO_NAME: ${{ github.repository }}
+          NEW_USER: ${{ github.event.client_payload.new_members[0] }}
         run: |
-          curl -s -H "Authorization: token $GH_TOKEN" \
-            https://api.github.com/orgs/$ORG_NAME/members?per_page=100 \
-            | jq -r '.[].login' | sort > current_members.txt
-
-      - name: Compare with previous list
-        id: detect
-        run: |
-          if [ -f org-members.txt ]; then
-            echo "Comparing with existing org-members.txt..."
-            new_members=$(comm -13 org-members.txt current_members.txt)
-            echo "$new_members" > new_members.txt
-            if [ -s new_members.txt ]; then
-              echo "new_found=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "new_found=false" >> "$GITHUB_OUTPUT"
-            fi
-          else
-            echo "No previous file found. Creating baseline."
-            echo "new_found=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Create issue for new members
-        if: steps.detect.outputs.new_found == 'true'
-        run: |
-          joined=$(awk '{print "- @" $1}' new_members.txt ORS='\n')
-          timestamp=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          title="New Org Member(s) Joined"
-          body="The following member(s) joined the organization as of $timestamp:\n\n$joined"
+          title="Welcome @${NEW_USER} to the Organization 🎉"
+          body="Hi @${NEW_USER},\n\nWelcome to the **${REPO_NAME}** organization! We're excited to have you on board. 😊\n\nFeel free to explore the repositories and reach out if you need help getting started."
 
           curl -s -X POST -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$REPO_NAME/issues \
             -d "$(jq -n --arg title "$title" --arg body "$body" '{title: $title, body: $body}')"
-
-      - name: Commit latest member list
-        run: |
-             mv current_members.txt org-members.txt
-             git config user.name "github-actions"
-             git config user.email "github-actions@users.noreply.github.com"
-
-             git add org-members.txt
-             git commit -m "Update org-members.txt [bot]" || echo "No changes to commit"
-
-             git remote set-url origin https://x-access-token:${{ secrets.TOKEN }}@github.com/${{ env.REPO_NAME }}.git
-             git push
-
