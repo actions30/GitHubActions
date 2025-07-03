@@ -2,70 +2,73 @@ name: Detect New Org Member
 
 on:
 #   schedule:
-#     - cron: "*/15 * * * *"  # Every 15 minutes
+#     - cron: "*/15 * * * *"
   workflow_dispatch:
 
 jobs:
   check-new-member:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed to save state file
+      contents: read
+      actions: read
     env:
       ORG_NAME: actions30
       REPO_NAME: GitHubActions
       GH_TOKEN: ${{ secrets.TOKEN }}
 
     steps:
-      - name: Checkout the repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Get current members
+      - name: Download previous member list artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: previous-members
+        continue-on-error: true
+
+      - name: Fetch current member list
         run: |
           curl -s -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/orgs/$ORG_NAME/members?per_page=100 \
             | jq -r '.[].login' | sort > current_members.txt
 
-      - name: Load previous members (if any)
+      - name: Detect new members
+        id: detect
         run: |
           if [ -f previous_members.txt ]; then
-            echo "Previous member list found."
-            cp previous_members.txt temp_old.txt
-          else
-            echo "First run. Creating baseline."
-            cp current_members.txt previous_members.txt
-            exit 0
-          fi
-
-      - name: Compare and detect new members
-        id: diff_check
-        run: |
-          new_members=$(comm -13 temp_old.txt current_members.txt)
-          echo "New members:"
-          echo "$new_members"
-
-          if [ -n "$new_members" ]; then
-            echo "new_found=true" >> "$GITHUB_OUTPUT"
+            echo "Comparing with previous member list..."
+            new_members=$(comm -13 previous_members.txt current_members.txt)
             echo "$new_members" > new_members.txt
+
+            if [ -s new_members.txt ]; then
+              echo "new_found=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "new_found=false" >> "$GITHUB_OUTPUT"
+            fi
           else
+            echo "No previous member list found. First run, skipping comparison."
             echo "new_found=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create issue for new members
-        if: steps.diff_check.outputs.new_found == 'true'
+        if: steps.detect.outputs.new_found == 'true'
         run: |
-          joined_list=$(cat new_members.txt | awk '{print "- @" $1}' ORS='\n')
+          joined=$(awk '{print "- @" $1}' new_members.txt ORS='\n')
           timestamp=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          issue_title="New Org Member(s) Joined"
-          issue_body="The following member(s) joined the organization as of $timestamp:\n\n$joined_list"
+          title="New Org Member(s) Joined"
+          body="The following member(s) joined the organization as of $timestamp:\n\n$joined"
 
           curl -s -X POST -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$REPO_NAME/issues \
-            -d "$(jq -n --arg title "$issue_title" --arg body "$issue_body" '{title: $title, body: $body}')"
+            -d "$(jq -n --arg title "$title" --arg body "$body" '{title: $title, body: $body}')"
 
-      - name: Update previous member list
-        run: |
-          cp current_members.txt previous_members.txt
+      - name: Upload current member list as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: previous-members
+          path: current_members.txt
+          retention-days: 7
