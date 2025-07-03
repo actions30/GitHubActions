@@ -65,9 +65,13 @@ jobs:
             https://api.github.com/repos/$REPO_NAME/issues \
             -d "$(jq -n --arg title "$title" --arg body "$body" '{title: $title, body: $body}')"
 
-      - name: Upload current member list as artifact
+      - name: Rename current to previous
+        run: mv current_members.txt previous_members.txt
+
+      - name: Upload previous member list as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: previous-members
-          path: current_members.txt
-          retention-days: 7
+            name: previous-members
+            path: previous_members.txt
+            retention-days: 7
+
