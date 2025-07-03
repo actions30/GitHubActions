@@ -1,19 +1,18 @@
-name: Detect New Org Member
+name: Detect New Org Member (Dispatch)
 
 on:
-#   schedule:
-#     - cron: "*/15 * * * *"
-  workflow_dispatch:
+  repository_dispatch:
+    types: [new-org-member]
 
 jobs:
-  check-new-member:
+  handle-dispatch:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       actions: read
     env:
       ORG_NAME: actions30
-      REPO_NAME: GitHubActions
+      REPO_NAME: actions30/GitHubActions
       GH_TOKEN: ${{ secrets.TOKEN }}
 
     steps:
