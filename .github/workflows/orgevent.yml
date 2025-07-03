@@ -1,8 +1,8 @@
 name: Member Join Tracker
 
 on:
-  schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+  # schedule:
+  #   - cron: '*/15 * * * *'  # Every 15 minutes
   workflow_dispatch:        # Manual trigger option
 
 jobs:
@@ -23,9 +23,9 @@ jobs:
 
       - name: Check recent org.add_member events
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          ORG_NAME: your-org-name
-          REPO_NAME: your-org-name/target-repo
+          GH_TOKEN: ${{ secrets.TOKEN}}
+          ORG_NAME: actions30
+          REPO_NAME: actions30/GitHubActions
         run: |
           echo "Fetching Audit Logs..."
 
