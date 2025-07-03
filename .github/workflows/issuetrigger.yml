@@ -1,78 +1,71 @@
-name: Member Join Tracker
+name: Detect New Org Member
 
 on:
-  # schedule:
-  #   - cron: '*/15 * * * *'  # Every 15 minutes
-  workflow_dispatch:        # Manual trigger option
+#   schedule:
+#     - cron: "*/15 * * * *"  # Every 15 minutes
+  workflow_dispatch:
 
 jobs:
-  track-member:
+  check-new-member:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to save state file
+    env:
+      ORG_NAME: actions30
+      REPO_NAME: GitHubActions
+      GH_TOKEN: ${{ secrets.TOKEN }}
 
     steps:
-      - name: Checkout
+      - name: Checkout the repo
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Install jq
-        run: sudo apt-get install jq
+        run: sudo apt-get install -y jq
 
-      - name: Print raw audit log API response
+      - name: Get current members
         run: |
-               curl -s -H "Authorization: token $TOKEN" \
-               "https://api.github.com/orgs/$ORG_NAME/audit-log?include=web&per_page=10&phrase=action:add_member"
+          curl -s -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/orgs/$ORG_NAME/members?per_page=100 \
+            | jq -r '.[].login' | sort > current_members.txt
 
+      - name: Load previous members (if any)
+        run: |
+          if [ -f previous_members.txt ]; then
+            echo "Previous member list found."
+            cp previous_members.txt temp_old.txt
+          else
+            echo "First run. Creating baseline."
+            cp current_members.txt previous_members.txt
+            exit 0
+          fi
 
-    #   - name: Check recent org.add_member events
-    #     env:
-    #       GH_TOKEN: ${{ secrets.TOKEN}}
-    #       ORG_NAME: actions30
-    #       REPO_NAME: actions30/GitHubActions
-    #     run: |
-    #       echo "Fetching Audit Logs..."
+      - name: Compare and detect new members
+        id: diff_check
+        run: |
+          new_members=$(comm -13 temp_old.txt current_members.txt)
+          echo "New members:"
+          echo "$new_members"
 
-    #       response=$(curl -s -H "Authorization: token $GH_TOKEN" \
-    #         "https://api.github.com/orgs/$ORG_NAME/audit-log?include=web&per_page=10&phrase=action:add_member")
+          if [ -n "$new_members" ]; then
+            echo "new_found=true" >> "$GITHUB_OUTPUT"
+            echo "$new_members" > new_members.txt
+          else
+            echo "new_found=false" >> "$GITHUB_OUTPUT"
+          fi
 
-    #       echo "$response" | jq '.[] | {login: .actor, time: .created_at}' > members.json
-    #       echo "$response" | jq '.[] | {login: .actor, time: .created_at}'
+      - name: Create issue for new members
+        if: steps.diff_check.outputs.new_found == 'true'
+        run: |
+          joined_list=$(cat new_members.txt | awk '{print "- @" $1}' ORS='\n')
+          timestamp=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          issue_title="New Org Member(s) Joined"
+          issue_body="The following member(s) joined the organization as of $timestamp:\n\n$joined_list"
 
+          curl -s -X POST -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO_NAME/issues \
+            -d "$(jq -n --arg title "$issue_title" --arg body "$issue_body" '{title: $title, body: $body}')"
 
-    #       echo "Checking new members..."
-    #       cat members.json
-
-    #       # Get last known login from previous run
-    #       if [ -f last_member.txt ]; then
-    #         last_known=$(cat last_member.txt)
-    #       else
-    #         last_known=""
-    #       fi
-
-    #       # Extract the newest login
-    #       newest_login=$(jq -r '.[0].login' members.json)
-
-    #       if [ "$newest_login" != "$last_known" ]; then
-    #         echo "New member detected: $newest_login"
-
-    #         # Save for next comparison
-    #         echo "$newest_login" > last_member.txt
-
-    #         echo "Creating issue..."
-    #         issue_title="New Member Joined: $newest_login"
-    #         issue_body=" A new member **$newest_login** has joined the organization at $(date -u)."
-
-    #         curl -s -X POST -H "Authorization: token $GH_TOKEN" \
-    #           -H "Accept: application/vnd.github+json" \
-    #           https://api.github.com/repos/$REPO_NAME/issues \
-    #           -d "$(jq -n \
-    #             --arg title "$issue_title" \
-    #             --arg body "$issue_body" \
-    #             '{title: $title, body: $body}')"
-
-    #       else
-    #         echo "No new member since last check."
-    #       fi
+      - name: Update previous member list
+        run: |
+          cp current_members.txt previous_members.txt
