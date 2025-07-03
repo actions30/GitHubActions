@@ -8,8 +8,7 @@ jobs:
   handle-dispatch:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      actions: read
+      contents: write  # Needed to push to repo
     env:
       ORG_NAME: actions30
       REPO_NAME: actions30/GitHubActions
@@ -22,33 +21,26 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Download previous member list artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: previous-members
-        continue-on-error: true
-
       - name: Fetch current member list
         run: |
           curl -s -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/orgs/$ORG_NAME/members?per_page=100 \
             | jq -r '.[].login' | sort > current_members.txt
 
-      - name: Detect new members
+      - name: Compare with previous list
         id: detect
         run: |
-          if [ -f previous_members.txt ]; then
-            echo "Comparing with previous member list..."
-            new_members=$(comm -13 previous_members.txt current_members.txt)
+          if [ -f org-members.txt ]; then
+            echo "Comparing with existing org-members.txt..."
+            new_members=$(comm -13 org-members.txt current_members.txt)
             echo "$new_members" > new_members.txt
-
             if [ -s new_members.txt ]; then
               echo "new_found=true" >> "$GITHUB_OUTPUT"
             else
               echo "new_found=false" >> "$GITHUB_OUTPUT"
             fi
           else
-            echo "No previous member list found. First run, skipping comparison."
+            echo "No previous file found. Creating baseline."
             echo "new_found=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -65,13 +57,11 @@ jobs:
             https://api.github.com/repos/$REPO_NAME/issues \
             -d "$(jq -n --arg title "$title" --arg body "$body" '{title: $title, body: $body}')"
 
-      - name: Rename current to previous
-        run: mv current_members.txt previous_members.txt
-
-      - name: Upload previous member list as artifact
-        uses: actions/upload-artifact@v4
-        with:
-            name: previous-members
-            path: previous_members.txt
-            retention-days: 7
-
+      - name: Commit latest member list
+        run: |
+          mv current_members.txt org-members.txt
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add org-members.txt
+          git commit -m "Update org-members.txt [bot]" || echo "No changes to commit"
+          git push
