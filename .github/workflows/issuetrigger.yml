@@ -17,8 +17,8 @@ jobs:
           REPO_NAME: ${{ github.repository }}
           NEW_USER: ${{ github.event.client_payload.new_members[0] }}
         run: |
-          title="Welcome @${NEW_USER} to the Organization 🎉"
-          body="Hi @${NEW_USER},\n\nWelcome to the **${REPO_NAME}** organization! We're excited to have you on board. 😊\n\nFeel free to explore the repositories and reach out if you need help getting started."
+          title="Welcome @${NEW_USER} to the Organization "
+          body="Hi @${NEW_USER},\n\nWelcome to the **${REPO_NAME}** organization! We're excited to have you on board. \n\nFeel free to explore the repositories and reach out if you need help getting started."
 
           curl -s -X POST -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
