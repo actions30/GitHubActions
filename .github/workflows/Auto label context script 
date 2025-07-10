@@ -2,7 +2,7 @@ name: Auto Label
 
 on:
   issues:
-    types: [opened]
+    types: [opened]   #isuue opened
 
 jobs:
   labeler:
