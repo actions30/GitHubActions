@@ -1,0 +1,28 @@
+name: Reusable workflow
+
+on: 
+    workflow_call: 
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install cowsay
+              run: sudo apt-get install cowsay -y
+
+
+            - name: Execute cowsay command
+              run: cowsay -f dragon "Im a Dragon" >> dragon1.txt
+              
+            - name: upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: dragon1-artifact
+                path: dragon.txt
+                
+
+            - name: sleep for 30 secs
+              run: sleep 30
+
+    
