@@ -1,0 +1,23 @@
+name: Create Issue on Failure
+
+on:
+  workflow_run:
+    workflows: ["CI Build"]
+    types:
+      - completed
+
+jobs:
+  create_issue:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PERSONAL_TOKEN }}
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Build Failed in ${context.workflow}`,
+              body: `The workflow **${context.workflow}** failed for commit \`${context.payload.workflow_run.head_commit.id}\`.`
+            });
