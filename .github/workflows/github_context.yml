@@ -1,0 +1,12 @@
+name: Comment on PR
+
+on: push
+
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write GitHub context to log
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
