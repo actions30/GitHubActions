@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      - develop
-      - "release/*"
+      - feature
 
 jobs:
   notify:
@@ -17,5 +16,5 @@ jobs:
           curl -X POST \
             -H "Authorization: token ${{ secrets.PARENT_REPO_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/your-org/parent-repo/dispatches \
+             https://github.com/actions30/test/dispatches \
             -d '{"event_type": "child-updated"}'
