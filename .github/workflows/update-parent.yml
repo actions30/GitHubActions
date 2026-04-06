@@ -1,0 +1,20 @@
+name: Notify parent repo to update submodule
+
+on:
+  push:
+    branches:
+      - main
+      - feature
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger parent repo workflow
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PARENT_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+             https://github.com/actions30/test/dispatches \
+            -d '{"event_type": "child-updated"}'
