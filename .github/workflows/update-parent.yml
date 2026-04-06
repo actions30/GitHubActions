@@ -1,7 +1,7 @@
 name: Notify parent repo to update submodule
 
 on:
-  workflow_dispatch: 
+  push:  
 
 jobs:
   notify:
