@@ -1,6 +1,6 @@
 name: Comment on PR
 
-on: push
+on: workflow_dispatch
 
 jobs:
   write_contexts_to_log:
